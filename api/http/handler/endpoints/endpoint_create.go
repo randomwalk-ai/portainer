@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"fmt"
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/agent"
@@ -56,6 +57,7 @@ const (
 
 func (payload *endpointCreatePayload) Validate(r *http.Request) error {
 	name, err := request.RetrieveMultiPartFormValue(r, "Name", false)
+	fmt.Println("name: ",name)
 	if err != nil {
 		return errors.New("invalid environment name")
 	}

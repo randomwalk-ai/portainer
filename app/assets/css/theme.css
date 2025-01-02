@@ -101,16 +101,16 @@
   --bg-main-color: var(--white-color);
   --bg-body-color: var(--grey-9);
   --bg-checkbox-border-color: var(--grey-49);
-  --bg-sidebar-color: var(--ui-blue-10);
-  --bg-sidebar-nav-color: var(--ui-blue-11);
+  --bg-sidebar-color: var(--ui-purple-10);
+  --bg-sidebar-nav-color: var(--ui-purple-11);
   --bg-widget-color: var(--white-color);
   --bg-widget-header-color: var(--grey-10);
   --bg-widget-table-color: var(--ui-gray-3);
   --bg-header-color: var(--white-color);
   --bg-hover-table-color: var(--grey-14);
   --bg-input-group-addon-color: var(--ui-gray-3);
-  --bg-btn-default-color: var(--ui-blue-10);
-  --bg-blocklist-hover-color: var(--ui-blue-2);
+  --bg-btn-default-color: var(--ui-purple-10);
+  --bg-blocklist-hover-color: var(--ui-purple-2);
   --bg-table-color: var(--white-color);
   --bg-md-checkbox-color: var(--grey-12);
   --bg-form-control-disabled-color: var(--grey-11);
@@ -124,10 +124,10 @@
   --bg-pre-color: var(--grey-14);
   --bg-blocklist-item-selected-color: var(--grey-12);
   --bg-progress-color: var(--grey-14);
-  --bg-pagination-color: var(--ui-blue-3);
+  --bg-pagination-color: var(--ui-purple-3);
   --border-pagination-color: var(--ui-white);
   --bg-pagination-span-color: var(--white-color);
-  --bg-pagination-hover-color: var(--ui-blue-3);
+  --bg-pagination-hover-color: var(--ui-purple-3);
   --bg-motd-body-color: var(--grey-20);
   --bg-item-highlighted-color: var(--grey-21);
   --bg-item-highlighted-null-color: var(--grey-14);
@@ -144,13 +144,13 @@
   --bg-daterangepicker-in-range: var(--grey-58);
   --bg-daterangepicker-active: var(--blue-14);
   --bg-input-autofill-color: var(--bg-inputbox);
-  --bg-btn-default-hover-color: var(--ui-blue-9);
+  --bg-btn-default-hover-color: var(--ui-purple-9);
   --bg-btn-focus: var(--grey-59);
   --bg-small-select-color: var(--white-color);
   --bg-stepper-item-active: var(--white-color);
   --bg-stepper-item-counter: var(--grey-61);
   --bg-sortbutton-color: var(--white-color);
-  --bg-dashboard-item: var(--ui-blue-3);
+  --bg-dashboard-item: var(--ui-purple-3);
   --bg-searchbar: var(--ui-gray-2);
   --bg-inputbox: var(--ui-gray-2);
   --bg-dropdown-hover: var(--ui-gray-3);
@@ -159,7 +159,7 @@
   --bg-pagination-disabled-color: var(--ui-white);
   --bg-code-script-color: var(--ui-white);
   --bg-stepper-color: var(--ui-white);
-  --bg-stepper-active-color: var(--ui-blue-1);
+  --bg-stepper-active-color: var(--ui-purple-1);
   --bg-code-color: var(--ui-white);
 
   --text-main-color: var(--grey-7);
@@ -202,10 +202,10 @@
   --text-bootbox: var(--ui-gray-7);
   --text-button-group-color: var(--ui-gray-9);
   --text-button-dangerlight-color: var(--ui-error-5);
-  --text-stepper-active-color: var(--ui-blue-8);
+  --text-stepper-active-color: var(--ui-purple-8);
   --border-color: var(--grey-42);
   --border-widget-color: var(--grey-43);
-  --border-sidebar-color: var(--ui-blue-9);
+  --border-sidebar-color: var(--ui-purple-9);
   --border-form-control-color: var(--grey-44);
   --border-table-color: var(--grey-19);
   --border-table-top-color: var(--grey-19);
@@ -331,7 +331,7 @@
   --bg-pagination-disabled-color: var(--grey-1);
   --bg-code-script-color: var(--ui-gray-warm-11);
   --bg-stepper-color: var(--ui-gray-iron-10);
-  --bg-stepper-active-color: var(--ui-blue-8);
+  --bg-stepper-active-color: var(--ui-purple-8);
 
   --text-main-color: var(--white-color);
   --text-body-color: var(--white-color);
@@ -497,7 +497,7 @@
   --bg-pagination-disabled-color: var(--ui-black);
   --bg-pagination-hover-color: var(--ui-black);
   --bg-code-script-color: var(--ui-black);
-  --bg-stepper-active-color: var(--ui-blue-8);
+  --bg-stepper-active-color: var(--ui-purple-8);
   --bg-stepper-color: var(--ui-black);
 
   --text-main-color: var(--white-color);

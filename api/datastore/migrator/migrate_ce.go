@@ -94,15 +94,15 @@ func (m *Migrator) NeedsMigration() bool {
 	// i.e. the MigratorCount
 
 	// In this particular instance we should log a fatal error
-	if m.CurrentDBEdition() != portainer.PortainerCE {
-		log.Fatal().Msg("the Portainer database is set for Portainer Business Edition, please follow the instructions in our documentation to downgrade it: https://documentation.portainer.io/v2.0-be/downgrade/be-to-ce/")
+	// if m.CurrentDBEdition() != portainer.PortainerCE {
+	// 	log.Fatal().Msg("the Portainer database is set for Portainer Business Edition, please follow the instructions in our documentation to downgrade it: https://documentation.portainer.io/v2.0-be/downgrade/be-to-ce/")
 
-		return false
-	}
+	// 	return false
+	// }
 
-	if m.CurrentSemanticDBVersion().LessThan(semver.MustParse(portainer.APIVersion)) {
-		return true
-	}
+	// if m.CurrentSemanticDBVersion().LessThan(semver.MustParse(portainer.APIVersion)) {
+	// 	return true
+	// }
 
 	// Check if we have any migrations for the current version
 	latestMigrations := m.LatestMigrations()

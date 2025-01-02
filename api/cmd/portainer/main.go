@@ -15,7 +15,7 @@ import (
 	"github.com/portainer/portainer/api/cli"
 	"github.com/portainer/portainer/api/crypto"
 	"github.com/portainer/portainer/api/database"
-	"github.com/portainer/portainer/api/database/boltdb"
+	// "github.com/portainer/portainer/api/database/boltdb"
 	"github.com/portainer/portainer/api/database/models"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/datastore"
@@ -31,7 +31,6 @@ import (
 	"github.com/portainer/portainer/api/http/proxy"
 	kubeproxy "github.com/portainer/portainer/api/http/proxy/factory/kubernetes"
 	"github.com/portainer/portainer/api/internal/authorization"
-	"github.com/portainer/portainer/api/internal/edge"
 	"github.com/portainer/portainer/api/internal/edge/edgestacks"
 	"github.com/portainer/portainer/api/internal/endpointutils"
 	"github.com/portainer/portainer/api/internal/snapshot"
@@ -82,18 +81,23 @@ func initFileService(dataStorePath string) portainer.FileService {
 }
 
 func initDataStore(flags *portainer.CLIFlags, secretKey []byte, fileService portainer.FileService, shutdownCtx context.Context) dataservices.DataStore {
-	connection, err := database.NewDatabase("boltdb", *flags.Data, secretKey)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed creating database connection")
-	}
 
-	if bconn, ok := connection.(*boltdb.DbConnection); ok {
-		bconn.MaxBatchSize = *flags.MaxBatchSize
-		bconn.MaxBatchDelay = *flags.MaxBatchDelay
-		bconn.InitialMmapSize = *flags.InitialMmapSize
-	} else {
-		log.Fatal().Msg("failed creating database connection: expecting a boltdb database type but a different one was received")
+	connection, err := database.NewDatabase("postgres", *flags.Data, secretKey)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed creating PostgreSQL database connection")
 	}
+	// connection, err := database.NewDatabase("boltdb", *flags.Data, secretKey)
+	// if err != nil {
+	// 	log.Fatal().Err(err).Msg("failed creating database connection")
+	// }
+
+	// if bconn, ok := connection.(*boltdb.DbConnection); ok {
+	// 	bconn.MaxBatchSize = *flags.MaxBatchSize
+	// 	bconn.MaxBatchDelay = *flags.MaxBatchDelay
+	// 	bconn.InitialMmapSize = *flags.InitialMmapSize
+	// } else {
+	// 	log.Fatal().Msg("failed creating database connection: expecting a boltdb database type but a different one was received")
+	// }
 
 	store := datastore.NewStore(*flags.Data, fileService, connection)
 
@@ -358,14 +362,14 @@ func buildServer(flags *portainer.CLIFlags) portainer.Server {
 
 	dataStore := initDataStore(flags, encryptionKey, fileService, shutdownCtx)
 
-	if err := dataStore.CheckCurrentEdition(); err != nil {
-		log.Fatal().Err(err).Msg("")
-	}
+	// if err := dataStore.CheckCurrentEdition(); err != nil {
+	// 	log.Fatal().Err(err).Msg("")
+	// }
 
 	// check if the db schema version matches with server version
-	if !checkDBSchemaServerVersionMatch(dataStore, portainer.APIVersion, int(portainer.Edition)) {
-		log.Fatal().Msg("The database schema version does not align with the server version. Please consider reverting to the previous server version or addressing the database migration issue.")
-	}
+	// if !checkDBSchemaServerVersionMatch(dataStore, portainer.APIVersion, int(portainer.Edition)) {
+	// 	log.Fatal().Msg("The database schema version does not align with the server version. Please consider reverting to the previous server version or addressing the database migration issue.")
+	// }
 
 	instanceID, err := dataStore.Version().InstanceID()
 	if err != nil {
@@ -436,7 +440,7 @@ func buildServer(flags *portainer.CLIFlags) portainer.Server {
 
 	composeDeployer, err := compose.NewComposeDeployer(*flags.Assets, dockerConfigPath)
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed initializing compose deployer")
+		// log.Fatal().Err(err).Msg("failed initializing compose deployer")
 	}
 
 	composeStackManager := initComposeStackManager(composeDeployer, proxyManager)
@@ -465,10 +469,6 @@ func buildServer(flags *portainer.CLIFlags) portainer.Server {
 	helmPackageManager, err := initHelmPackageManager(*flags.Assets)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed initializing helm package manager")
-	}
-
-	if err := edge.LoadEdgeJobs(dataStore, reverseTunnelService); err != nil {
-		log.Fatal().Err(err).Msg("failed loading edge jobs from database")
 	}
 
 	applicationStatus := initStatus(instanceID)

@@ -1,11 +1,11 @@
 package security
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+	"fmt"
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/apikey"
@@ -208,8 +208,8 @@ func (bouncer *RequestBouncer) TrustedEdgeEnvironmentAccess(tx dataservices.Data
 // - authenticating the request with a valid token
 func (bouncer *RequestBouncer) mwAuthenticatedUser(h http.Handler) http.Handler {
 	h = bouncer.mwAuthenticateFirst([]tokenLookup{
-		bouncer.apiKeyLookup,
-		bouncer.CookieAuthLookup,
+		// bouncer.apiKeyLookup,
+		// bouncer.CookieAuthLookup,
 		bouncer.JWTAuthLookup,
 	}, h)
 	h = mwSecureHeaders(h)
@@ -223,6 +223,7 @@ func (bouncer *RequestBouncer) mwAuthenticatedUser(h http.Handler) http.Handler 
 // users from accessing the environment(endpoint).
 func (bouncer *RequestBouncer) mwCheckPortainerAuthorizations(next http.Handler, administratorOnly bool) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Checking PortainerAuthorizations")
 		tokenData, err := RetrieveTokenData(r)
 		if err != nil {
 			httperror.WriteError(w, http.StatusForbidden, "Access denied", httperrors.ErrUnauthorized)
@@ -294,80 +295,149 @@ func (bouncer *RequestBouncer) mwIsTeamLeader(next http.Handler) http.Handler {
 // mwAuthenticateFirst authenticates a request an auth token.
 // A result of a first succeeded token lookup would be used for the authentication.
 func (bouncer *RequestBouncer) mwAuthenticateFirst(tokenLookups []tokenLookup, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var token *portainer.TokenData
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        fmt.Println("\n=== Starting Authentication Process ===")
+        // fmt.Printf("Total lookups to try: %d\n", len(tokenLookups))
+        var token *portainer.TokenData
 
-		for _, lookup := range tokenLookups {
-			resultToken, err := lookup(r)
-			if err != nil {
-				httperror.WriteError(w, http.StatusUnauthorized, "Invalid JWT token", httperrors.ErrUnauthorized)
+        // Debug request info
+        // fmt.Println("\nRequest Headers:")
+        // fmt.Printf("Authorization: %v\n", r.Header.Get("Authorization"))
+        // fmt.Printf("API Key header: %v\n", r.Header.Get("X-API-Key"))
 
-				return
-			}
+        // fmt.Println("\nCookies:")
+        // for _, cookie := range r.Cookies() {
+        //     fmt.Printf("  %s: %s\n", cookie.Name, cookie.Value)
+        // }
 
-			if resultToken != nil {
-				token = resultToken
+        for i, lookup := range tokenLookups {
+            // Get lookup name by checking function pointer address
+            lookupName := "unknown"
+            switch fmt.Sprintf("%p", lookup) {
+            case fmt.Sprintf("%p", bouncer.apiKeyLookup):
+                lookupName = "API Key"
+            case fmt.Sprintf("%p", bouncer.CookieAuthLookup):
+                lookupName = "Cookie"
+            case fmt.Sprintf("%p", bouncer.JWTAuthLookup):
+                lookupName = "JWT"
+            }
+            
+            fmt.Printf("\n=== Trying %s lookup (#%d) ===\n", lookupName, i+1)
+            
+            resultToken, err := func() (token *portainer.TokenData, err error) {
+                defer func() {
+                    if r := recover(); r != nil {
+                        fmt.Printf("PANIC in %s lookup: %v\n", lookupName, r)
+                        err = fmt.Errorf("panic in lookup: %v", r)
+                    }
+                }()
+                return lookup(r)
+            }()
+            
+            if err != nil {
+                fmt.Printf("%s lookup failed with error: %v\n", lookupName, err)
+                httperror.WriteError(w, http.StatusUnauthorized, "Invalid token", httperrors.ErrUnauthorized)
+                return
+            }
 
-				break
-			}
-		}
+            if resultToken != nil {
+                fmt.Printf("%s lookup succeeded! Token: %+v\n", lookupName, resultToken)
+                token = resultToken
+                break
+            } else {
+                fmt.Printf("%s lookup returned nil token (no error)\n", lookupName)
+            }
+        }
 
-		if token == nil {
-			httperror.WriteError(w, http.StatusUnauthorized, "A valid authorization token is missing", httperrors.ErrUnauthorized)
+        if token == nil {
+            fmt.Println("\nAuthentication failed: No valid token found from any method")
+            httperror.WriteError(w, http.StatusUnauthorized, "A valid authorization token is missing", httperrors.ErrUnauthorized)
+            return
+        }
 
-			return
-		}
+        // fmt.Printf("\nProceeding to user lookup. Token ID: %v\n", token.ID)
+        
+        user, err := bouncer.dataStore.User().Read(portainer.UserID(token.ID))
+        if err != nil {
+            fmt.Printf("Error reading user with ID %v: %v\n", token.ID, err)
+        }
+        
+        if user == nil {
+            fmt.Printf("User lookup failed for token ID: %v\n", token.ID)
+            httperror.WriteError(w, http.StatusUnauthorized, "An authorization token is invalid", httperrors.ErrUnauthorized)
+            return
+        }
 
-		user, _ := bouncer.dataStore.User().Read(token.ID)
-		if user == nil {
-			httperror.WriteError(w, http.StatusUnauthorized, "An authorization token is invalid", httperrors.ErrUnauthorized)
-
-			return
-		}
-
-		ctx := StoreTokenData(r, token)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+        fmt.Printf("Authentication successful for user: ID=%v, Username=%v\n", user.ID, user.Username)
+        
+        ctx := StoreTokenData(r, token)
+        next.ServeHTTP(w, r.WithContext(ctx))
+    })
 }
 
 // JWTAuthLookup looks up a valid bearer in the request.
 func (bouncer *RequestBouncer) CookieAuthLookup(r *http.Request) (*portainer.TokenData, error) {
-	// get token from the Authorization header or query parameter
-	token, err := extractKeyFromCookie(r)
-	if err != nil {
-		return nil, nil
-	}
+    fmt.Println("Starting Cookie Auth Lookup")
+    
+    // get token from the cookie
+    cookie, err := r.Cookie(portainer.AuthCookieKey)
+    if err == http.ErrNoCookie {
+        fmt.Printf("Auth cookie '%s' not found\n", portainer.AuthCookieKey)
+        return nil, nil  // No cookie found, try next auth method
+    }
+    if err != nil {
+        fmt.Printf("Unexpected cookie error: %v\n", err)
+        return nil, nil  // Other cookie error, try next auth method
+    }
 
-	tokenData, jti, _, err := bouncer.jwtService.ParseAndVerifyToken(token)
-	if err != nil {
-		return nil, err
-	}
+    token := cookie.Value
+    if token == "" {
+        fmt.Println("Empty token in cookie")
+        return nil, nil
+    }
 
-	if _, ok := bouncer.revokedJWT.Load(jti); ok {
-		return nil, ErrRevokedJWT
-	}
+    fmt.Println("Successfully extracted token from cookie")
 
-	return tokenData, nil
+    tokenData, jti, _, err := bouncer.jwtService.ParseAndVerifyToken(token)
+    if err != nil {
+        fmt.Printf("Token parsing error: %v\n", err)
+        return nil, err
+    }
+
+    if _, ok := bouncer.revokedJWT.Load(jti); ok {
+        fmt.Println("Token is revoked")
+        return nil, ErrRevokedJWT
+    }
+
+    fmt.Printf("Successfully validated cookie token for user: %s\n", tokenData.Username)
+    return tokenData, nil
 }
 
 // JWTAuthLookup looks up a valid bearer in the request.
 func (bouncer *RequestBouncer) JWTAuthLookup(r *http.Request) (*portainer.TokenData, error) {
-	// get token from the Authorization header or query parameter
-	token, ok := extractBearerToken(r)
-	if !ok {
-		return nil, nil
-	}
+    fmt.Println("Starting JWT Auth Lookup")
+    
+    // get token from the Authorization header or query parameter
+    token, ok := extractBearerToken(r)
+    fmt.Printf("Bearer token extracted: %v\n", ok)
+    if !ok {
+		fmt.Println("No bearer token found")
+        return nil, nil
+    }
+	
+    tokenData, jti, _, err := bouncer.jwtService.ParseAndVerifyToken(token)
+    if err != nil {
+        fmt.Printf("Token parsing error: %v\n", err)
+        return nil, err
+    }
 
-	tokenData, jti, _, err := bouncer.jwtService.ParseAndVerifyToken(token)
-	if err != nil {
-		return nil, err
-	}
+    if _, ok := bouncer.revokedJWT.Load(jti); ok {
+        fmt.Println("Token is revoked")
+        return nil, ErrRevokedJWT
+    }
 
-	if _, ok := bouncer.revokedJWT.Load(jti); ok {
-		return nil, ErrRevokedJWT
-	}
-
-	return tokenData, nil
+    fmt.Printf("Successfully validated JWT token for user: %s\n", tokenData.Username)
+    return tokenData, nil
 }
 
 func (bouncer *RequestBouncer) RevokeJWT(token string) {
@@ -426,7 +496,7 @@ func (bouncer *RequestBouncer) apiKeyLookup(r *http.Request) (*portainer.TokenDa
 	}
 	if _, _, err := bouncer.jwtService.GenerateToken(tokenData); err != nil {
 		log.Debug().Err(err).Msg("Failed to generate token")
-		return nil, fmt.Errorf("failed to generate token")
+		return nil, errors.New("failed to generate token")
 	}
 
 	if now := time.Now().UTC().Unix(); now-apiKey.LastUsed > 60 { // [seconds]
@@ -521,6 +591,7 @@ func extractAPIKey(r *http.Request) (string, bool) {
 // mwSecureHeaders provides secure headers middleware for handlers.
 func mwSecureHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Checking Secure Headers")
 		w.Header().Set("X-XSS-Protection", "1; mode=block")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		next.ServeHTTP(w, r)

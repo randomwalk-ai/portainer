@@ -2,7 +2,7 @@ package dataservices
 
 import (
 	portainer "github.com/portainer/portainer/api"
-
+	
 	"golang.org/x/exp/constraints"
 )
 
@@ -19,7 +19,6 @@ func (service BaseDataServiceTx[T, I]) BucketName() string {
 func (service BaseDataServiceTx[T, I]) Read(ID I) (*T, error) {
 	var element T
 	identifier := service.Connection.ConvertToKey(int(ID))
-
 	err := service.Tx.GetObject(service.Bucket, identifier, &element)
 	if err != nil {
 		return nil, err

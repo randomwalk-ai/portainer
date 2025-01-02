@@ -85,25 +85,25 @@ func (handler *Handler) endpointEdgeStatusInspect(w http.ResponseWriter, r *http
 
 	if _, ok := handler.DataStore.Endpoint().Heartbeat(portainer.EndpointID(endpointID)); !ok {
 		// EE-5190
-		return httperror.Forbidden("Permission denied to access environment", errors.New("the device has not been trusted yet"))
+		return httperror.Forbidden("Permission denied to access environment. The device has not been trusted yet", fmt.Errorf("unable to retrieve endpoint heartbeat. Environment ID: %d", endpointID))
 	}
 
 	endpoint, err := handler.DataStore.Endpoint().Endpoint(portainer.EndpointID(endpointID))
 	if err != nil {
 		// EE-5190
-		return httperror.Forbidden("Permission denied to access environment", errors.New("the device has not been trusted yet"))
+		return httperror.Forbidden("Permission denied to access environment. The device has not been trusted yet", fmt.Errorf("unable to retrieve endpoint from database: %w. Environment ID: %d", err, endpointID))
 	}
 
 	firstConn := endpoint.LastCheckInDate == 0
 
 	if err := handler.requestBouncer.AuthorizedEdgeEndpointOperation(r, endpoint); err != nil {
-		return httperror.Forbidden("Permission denied to access environment", err)
+		return httperror.Forbidden("Permission denied to access environment. The device has not been trusted yet", fmt.Errorf("unauthorized Edge endpoint operation: %w. Environment name: %s", err, endpoint.Name))
 	}
 
 	handler.DataStore.Endpoint().UpdateHeartbeat(endpoint.ID)
 
 	if err := handler.requestBouncer.TrustedEdgeEnvironmentAccess(handler.DataStore, endpoint); err != nil {
-		return httperror.Forbidden("Permission denied to access environment", err)
+		return httperror.Forbidden("Permission denied to access environment. The device has not been trusted yet", fmt.Errorf("untrusted Edge environment access: %w. Environment name: %s", err, endpoint.Name))
 	}
 
 	var statusResponse *endpointEdgeStatusInspectResponse
@@ -113,10 +113,11 @@ func (handler *Handler) endpointEdgeStatusInspect(w http.ResponseWriter, r *http
 	}); err != nil {
 		var httpErr *httperror.HandlerError
 		if errors.As(err, &httpErr) {
+			httpErr.Err = fmt.Errorf("edge polling error: %w. Environment name: %s", httpErr.Err, endpoint.Name)
 			return httpErr
 		}
 
-		return httperror.InternalServerError("Unexpected error", err)
+		return httperror.InternalServerError("Unexpected error", fmt.Errorf("edge polling error: %w. Environment name: %s", err, endpoint.Name))
 	}
 
 	return cacheResponse(w, endpoint.ID, *statusResponse)
@@ -169,7 +170,7 @@ func (handler *Handler) inspectStatus(tx dataservices.DataStoreTx, r *http.Reque
 		Credentials:     tunnel.Credentials,
 	}
 
-	schedules, handlerErr := handler.buildSchedules(endpoint.ID)
+	schedules, handlerErr := handler.buildSchedules(tx, endpoint.ID)
 	if handlerErr != nil {
 		return nil, handlerErr
 	}
@@ -207,9 +208,33 @@ func parseAgentPlatform(r *http.Request) (portainer.EndpointType, error) {
 	}
 }
 
-func (handler *Handler) buildSchedules(endpointID portainer.EndpointID) ([]edgeJobResponse, *httperror.HandlerError) {
+func (handler *Handler) buildSchedules(tx dataservices.DataStoreTx, endpointID portainer.EndpointID) ([]edgeJobResponse, *httperror.HandlerError) {
 	schedules := []edgeJobResponse{}
-	for _, job := range handler.ReverseTunnelService.EdgeJobs(endpointID) {
+
+	edgeJobs, err := tx.EdgeJob().ReadAll()
+	if err != nil {
+		return nil, httperror.InternalServerError("Unable to retrieve Edge Jobs", err)
+	}
+
+	for _, job := range edgeJobs {
+		_, endpointHasJob := job.Endpoints[endpointID]
+		if !endpointHasJob {
+			for _, edgeGroupID := range job.EdgeGroups {
+				member, _, err := edge.EndpointInEdgeGroup(tx, endpointID, edgeGroupID)
+				if err != nil {
+					return nil, httperror.InternalServerError("Unable to retrieve relations", err)
+				} else if member {
+					endpointHasJob = true
+
+					break
+				}
+			}
+		}
+
+		if !endpointHasJob {
+			continue
+		}
+
 		var collectLogs bool
 		if _, ok := job.GroupLogsCollection[endpointID]; ok {
 			collectLogs = job.GroupLogsCollection[endpointID].CollectLogs

@@ -2,7 +2,6 @@ package edgejobs
 
 import (
 	"errors"
-	"fmt"
 	"maps"
 	"net/http"
 	"strconv"
@@ -12,6 +11,7 @@ import (
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/internal/edge"
+	"github.com/portainer/portainer/api/internal/edge/cache"
 	"github.com/portainer/portainer/api/internal/endpointutils"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/request"
@@ -114,9 +114,12 @@ func (handler *Handler) createEdgeJob(tx dataservices.DataStoreTx, payload *edge
 		}
 	}
 
-	err = handler.addAndPersistEdgeJob(tx, edgeJob, fileContent, endpoints)
-	if err != nil {
+	if err := handler.addAndPersistEdgeJob(tx, edgeJob, fileContent, endpoints); err != nil {
 		return nil, httperror.InternalServerError("Unable to schedule Edge job", err)
+	}
+
+	for _, endpointID := range endpoints {
+		cache.Del(endpointID)
 	}
 
 	return edgeJob, nil
@@ -145,15 +148,13 @@ func (payload *edgeJobCreateFromFilePayload) Validate(r *http.Request) error {
 	payload.CronExpression = cronExpression
 
 	var endpoints []portainer.EndpointID
-	err = request.RetrieveMultiPartFormJSONValue(r, "Endpoints", &endpoints, true)
-	if err != nil {
+	if err := request.RetrieveMultiPartFormJSONValue(r, "Endpoints", &endpoints, true); err != nil {
 		return errors.New("invalid environments")
 	}
 	payload.Endpoints = endpoints
 
 	var edgeGroups []portainer.EdgeGroupID
-	err = request.RetrieveMultiPartFormJSONValue(r, "EdgeGroups", &edgeGroups, true)
-	if err != nil {
+	if err := request.RetrieveMultiPartFormJSONValue(r, "EdgeGroups", &edgeGroups, true); err != nil {
 		return errors.New("invalid edge groups")
 	}
 	payload.EdgeGroups = edgeGroups
@@ -268,15 +269,6 @@ func (handler *Handler) addAndPersistEdgeJob(tx dataservices.DataStoreTx, edgeJo
 		return errors.New("environments or edge groups are mandatory for an Edge job")
 	}
 
-	for endpointID := range endpointsMap {
-		endpoint, err := tx.Endpoint().Endpoint(endpointID)
-		if err != nil {
-			return err
-		}
-
-		handler.ReverseTunnelService.AddEdgeJob(endpoint, edgeJob)
-	}
-
 	return tx.EdgeJob().CreateWithID(edgeJob.ID, edgeJob)
 }
 
@@ -300,5 +292,5 @@ func deprecatedEdgeJobCreateUrlParser(w http.ResponseWriter, r *http.Request) (s
 		return "", httperror.BadRequest("Invalid query parameter: method. Valid values are: file or string", err)
 	}
 
-	return fmt.Sprintf("/edge_jobs/create/%s", method), nil
+	return "/edge_jobs/create/" + method, nil
 }

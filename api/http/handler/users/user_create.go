@@ -103,7 +103,6 @@ func (handler *Handler) createUser(tx dataservices.DataStoreTx, payload userCrea
 		if !handler.passwordStrengthChecker.Check(payload.Password) {
 			return nil, httperror.BadRequest("Password does not meet the requirements", nil)
 		}
-
 		user.Password, err = handler.CryptoService.Hash(payload.Password)
 		if err != nil {
 			return nil, httperror.InternalServerError("Unable to hash user password", errCryptoHashFailure)

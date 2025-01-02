@@ -5041,6 +5041,50 @@ paths:
       summary: Check for portainer updates
       tags:
         - status
+  /hello:
+    get:
+      description: |-
+        Responds with a friendly greeting.
+        **Access policy**: public
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Hello, world!"
+        '500':
+          description: Server error
+      security: []
+      summary: Friendly greeting
+      tags:
+        - greeting
+  /create/table:
+    post:
+      description: |-
+        Responds with a friendly greeting.
+        **Access policy**: public
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Table created succesfully"
+        '500':
+          description: Server error
+      security: []
+      summary: Friendly greeting
+      tags:
+        - greeting
   /tags:
     get:
       description: |-

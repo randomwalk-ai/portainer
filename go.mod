@@ -32,6 +32,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/jpillora/chisel v1.10.0
 	github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c
+	github.com/lib/pq v1.10.9
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/orcaman/concurrent-map v1.0.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible

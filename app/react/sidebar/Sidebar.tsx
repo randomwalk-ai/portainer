@@ -14,6 +14,7 @@ import { Footer } from './Footer';
 import { Header } from './Header';
 import { SidebarProvider, useSidebarState } from './useSidebarState';
 import { UpgradeBEBannerWrapper } from './UpgradeBEBanner';
+import logo from '@/assets/images/logo.svg';
 
 export function Sidebar() {
   return (
@@ -42,7 +43,7 @@ function InnerSidebar() {
 
   return (
     <div className={clsx(styles.root, 'sidebar flex flex-col')}>
-      <UpgradeBEBannerWrapper />
+      {/* <UpgradeBEBannerWrapper /> */}
       <nav
         className={clsx(
           styles.nav,
@@ -51,7 +52,7 @@ function InnerSidebar() {
         )}
         aria-label="Main"
       >
-        <Header logo={LogoURL} />
+        <Header logo={logo} />
         {/* negative margin + padding -> scrollbar won't hide the content */}
         <div
           className={clsx(
@@ -77,7 +78,7 @@ function InnerSidebar() {
           </ul>
         </div>
         <div className="mt-auto pt-8">
-          <Footer />
+          {/* <Footer /> */}
         </div>
       </nav>
     </div>

@@ -1568,10 +1568,6 @@ type (
 		TunnelAddr(endpoint *Endpoint) (string, error)
 		UpdateLastActivity(endpointID EndpointID)
 		KeepTunnelAlive(endpointID EndpointID, ctx context.Context, maxKeepAlive time.Duration)
-		EdgeJobs(endpointId EndpointID) []EdgeJob
-		AddEdgeJob(endpoint *Endpoint, edgeJob *EdgeJob)
-		RemoveEdgeJob(edgeJobID EdgeJobID)
-		RemoveEdgeJobFromEndpoint(endpointID EndpointID, edgeJobID EdgeJobID)
 	}
 
 	// Server defines the interface to serve the API
@@ -1599,7 +1595,7 @@ type (
 
 const (
 	// APIVersion is the version number of the Portainer API
-	APIVersion = "2.22.0"
+	APIVersion = "2.23.0"
 	// Edition is what this edition of Portainer is called
 	Edition = PortainerCE
 	// ComposeSyntaxMaxVersion is a maximum supported version of the docker compose syntax
