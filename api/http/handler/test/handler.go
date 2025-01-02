@@ -23,7 +23,7 @@ func NewHandler(bouncer security.BouncerService, dataStore dataservices.DataStor
     h.Handle("/hello",
 		bouncer.PublicAccess(httperror.LoggerHandler(h.hello))).Methods(http.MethodGet)
     h.Handle("/create/table",
-		bouncer.PublicAccess(httperror.LoggerHandler(h.createTable))).Methods(http.MethodPost)
+		bouncer.AdminAccess(httperror.LoggerHandler(h.createTable))).Methods(http.MethodPost)
 
     return h
 }
