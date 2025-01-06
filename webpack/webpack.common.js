@@ -98,7 +98,18 @@ module.exports = {
     compress: true,
     port: 8999,
     proxy: {
-      '/api': 'http://localhost:9000',
+      '/api': {
+        target: 'https://localhost:9443',
+        changeOrigin: true,
+        secure: false,  // Important for self-signed certificates
+        https: true,
+        rejectUnauthorized: false,
+        pathRewrite: {
+          '^/api': '/api'
+        },
+        withCredentials: true,
+        cookieDomainRewrite: 'localhost',
+      }
     },
     open: true,
     devMiddleware: {

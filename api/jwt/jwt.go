@@ -113,42 +113,58 @@ func (service *Service) GenerateToken(data *portainer.TokenData) (string, time.T
 
 // ParseAndVerifyToken parses a JWT token and verify its validity. It returns an error if token is invalid.
 func (service *Service) ParseAndVerifyToken(token string) (*portainer.TokenData, string, time.Time, error) {
-	scope := parseScope(token)
-	secret := service.secrets[scope]
+    scope := parseScope(token)
+    secret, exists := service.secrets[scope]
+    if !exists || secret == nil {
+        fmt.Println("Invalid scope or missing secret")
+        return nil, "", time.Time{}, errInvalidJWTToken
+    }
 
-	parsedToken, err := jwt.ParseWithClaims(token, &claims{}, func(token *jwt.Token) (any, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
+    parsedToken, err := jwt.ParseWithClaims(token, &claims{}, func(token *jwt.Token) (any, error) {
+        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+            return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+        }
+        return secret, nil
+    })
 
-		return secret, nil
-	})
-	if err != nil || parsedToken == nil {
-		return nil, "", time.Time{}, errInvalidJWTToken
-	}
+    if err != nil || parsedToken == nil {
+        fmt.Printf("Token parsing failed: %v\n", err)
+        return nil, "", time.Time{}, errInvalidJWTToken
+    }
 
-	cl, ok := parsedToken.Claims.(*claims)
-	if !ok || !parsedToken.Valid {
-		return nil, "", time.Time{}, errInvalidJWTToken
-	}
+    cl, ok := parsedToken.Claims.(*claims)
+    if !ok || cl == nil || !parsedToken.Valid {
+        fmt.Println("Invalid claims or token is not valid")
+        return nil, "", time.Time{}, errInvalidJWTToken
+    }
 
-	user, err := service.dataStore.User().Read(portainer.UserID(cl.UserID))
-	if err != nil || user.TokenIssueAt > cl.RegisteredClaims.IssuedAt.Unix() {
-		return nil, "", time.Time{}, errInvalidJWTToken
-	}
+	fmt.Println("cl: ",cl)
+	fmt.Println("cl.userid: ",cl.UserID)
+    user, err := service.dataStore.User().Read(portainer.UserID(cl.UserID))
+    if err != nil || user == nil {
+        fmt.Println("User lookup failed")
+        return nil, "", time.Time{}, errInvalidJWTToken
+    }
 
-	if cl.ExpiresAt == nil {
-		cl.ExpiresAt = &jwt.NumericDate{}
-	}
+	fmt.Println("user",user)
+    if user.TokenIssueAt > cl.RegisteredClaims.IssuedAt.Unix() {
+        fmt.Println("Token issued before user's token issuance time")
+        return nil, "", time.Time{}, errInvalidJWTToken
+    }
 
-	return &portainer.TokenData{
-		ID:                  portainer.UserID(cl.UserID),
-		Username:            cl.Username,
-		Role:                portainer.UserRole(cl.Role),
-		Token:               token,
-		ForceChangePassword: cl.ForceChangePassword,
-	}, cl.ID, cl.ExpiresAt.Time, nil
+    if cl.ExpiresAt == nil {
+        cl.ExpiresAt = &jwt.NumericDate{Time: time.Unix(0, 0)}
+    }
+
+    return &portainer.TokenData{
+        ID:                  portainer.UserID(cl.UserID),
+        Username:            cl.Username,
+        Role:                portainer.UserRole(cl.Role),
+        Token:               token,
+        ForceChangePassword: cl.ForceChangePassword,
+    }, cl.ID, cl.ExpiresAt.Time, nil
 }
+
 
 // Parse a JWT token, fallback to defaultScope if no scope is present in the JWT
 func parseScope(token string) scope {

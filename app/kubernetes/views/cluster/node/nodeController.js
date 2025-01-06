@@ -310,7 +310,9 @@ class KubernetesNodeController {
   }
 
   getNodeUsage() {
-    return this.$async(this.getNodeUsageAsync);
+    if (this.hasResourceUsageAccess()) {
+      return this.$async(this.getNodeUsageAsync);
+    }
   }
 
   hasEventWarnings() {
@@ -361,9 +363,9 @@ class KubernetesNodeController {
       useServerMetrics: this.endpoint.Kubernetes.Configuration.UseServerMetrics,
     };
 
+    // getEvents depends on nodes, so get nodes first
     await this.getNodes();
-    await this.getEvents();
-    await this.getEndpoints();
+    await Promise.allSettled([this.getEvents(), this.getEndpoints(), this.getNodeUsage()]);
 
     this.availableEffects = _.values(KubernetesNodeTaintEffects);
     this.formValues = KubernetesNodeConverter.nodeToFormValues(this.node);
@@ -371,7 +373,6 @@ class KubernetesNodeController {
     this.formValues.Labels = KubernetesNodeHelper.reorderLabels(this.formValues.Labels);
 
     this.resourceReservation = await getTotalResourcesForAllApplications(this.$state.params.endpointId, this.node.Name);
-    this.resourceReservation.CpuRequest = Math.round(this.resourceReservation.CpuRequest / 1000);
     this.resourceReservation.MemoryRequest = KubernetesResourceReservationHelper.megaBytesValue(this.resourceReservation.MemoryRequest);
     this.node.Memory = KubernetesResourceReservationHelper.megaBytesValue(this.node.Memory);
 

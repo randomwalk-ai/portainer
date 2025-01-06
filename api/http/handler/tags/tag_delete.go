@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"slices"
+	"fmt"
 
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
@@ -49,7 +50,9 @@ func (handler *Handler) tagDelete(w http.ResponseWriter, r *http.Request) *httpe
 }
 
 func deleteTag(tx dataservices.DataStoreTx, tagID portainer.TagID) error {
+	fmt.Println("tagId: ",tagID)
 	tag, err := tx.Tag().Read(tagID)
+	fmt.Println("tag: ",tag)
 	if tx.IsErrObjectNotFound(err) {
 		return httperror.NotFound("Unable to find a tag with the specified identifier inside the database", err)
 	} else if err != nil {

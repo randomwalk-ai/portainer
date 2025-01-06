@@ -3,6 +3,7 @@ package auth
 import (
 	"net/http"
 	"strings"
+	"fmt"
 
 	portainer "github.com/portainer/portainer/api"
 	httperrors "github.com/portainer/portainer/api/http/errors"
@@ -112,6 +113,9 @@ func (handler *Handler) authenticateInternal(w http.ResponseWriter, user *portai
 }
 
 func (handler *Handler) authenticateLDAP(w http.ResponseWriter, user *portainer.User, username, password string, ldapSettings *portainer.LDAPSettings) *httperror.HandlerError {
+	fmt.Println("user: ",user)
+	fmt.Println("username: ",username)
+	fmt.Println("password: ",password)
 	if err := handler.LDAPService.AuthenticateUser(username, password, ldapSettings); err != nil {
 		if errors.Is(err, httperrors.ErrUnauthorized) {
 			return httperror.NewError(http.StatusUnprocessableEntity, "Invalid credentials", httperrors.ErrUnauthorized)

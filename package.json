@@ -2,7 +2,7 @@
   "author": "Portainer.io",
   "name": "portainer",
   "homepage": "http://portainer.io",
-  "version": "2.22.0",
+  "version": "2.23.0",
   "repository": {
     "type": "git",
     "url": "git@github.com:portainer/portainer.git"
@@ -27,7 +27,7 @@
     "storybook": "storybook dev -p 6006",
     "storybook:build": "storybook build -o ./dist/storybook",
     "analyze-webpack": "webpack --config ./webpack/webpack.analyze.js",
-    "prepare": "husky install"
+    "prepare": "cd ../.. && husky install package/server-ce/.husky"
   },
   "engines": {
     "node": ">= 16"

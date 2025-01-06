@@ -3,7 +3,7 @@ package tags
 import (
 	"errors"
 	"net/http"
-
+	"fmt"
 	"github.com/portainer/portainer/api/dataservices"
 	"github.com/portainer/portainer/api/http/security"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
@@ -23,6 +23,8 @@ func NewHandler(bouncer security.BouncerService) *Handler {
 	h := &Handler{
 		Router: mux.NewRouter(),
 	}
+	fmt.Println("inside tag handler")
+	
 	h.Handle("/tags",
 		bouncer.AdminAccess(httperror.LoggerHandler(h.tagCreate))).Methods(http.MethodPost)
 	h.Handle("/tags",

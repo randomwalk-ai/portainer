@@ -2,7 +2,7 @@ package system
 
 import (
 	"net/http"
-
+	"fmt"
 	portainer "github.com/portainer/portainer/api"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
 	"github.com/portainer/portainer/pkg/libhttp/response"
@@ -41,6 +41,12 @@ func (handler *Handler) systemStatus(w http.ResponseWriter, r *http.Request) *ht
 // @router /status [get]
 func (handler *Handler) statusInspectDeprecated(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 	log.Warn().Msg("The /status endpoint is deprecated and will be removed in a future version of Portainer. Please use the /system/status endpoint instead.")
+	fmt.Println("Hello endpoint called")
+	fmt.Println("Request Details:")
+	fmt.Println("  Remote Address: %s", r.RemoteAddr)
+	fmt.Println("  Host: %s", r.Host)
+	fmt.Println("  Path: %s", r.URL.Path)
+	fmt.Println("  Method: %s", r.Method)
 
 	return handler.systemStatus(w, r)
 }

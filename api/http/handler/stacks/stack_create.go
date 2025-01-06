@@ -180,6 +180,7 @@ func getStackTypeFromQueryParameter(r *http.Request) (string, error) {
 // @router /stacks [post]
 func deprecatedStackCreateUrlParser(w http.ResponseWriter, r *http.Request) (string, *httperror.HandlerError) {
 	method, err := request.RetrieveQueryParameter(r, "method", false)
+	fmt.Println("method: ",method)
 	if err != nil {
 		return "", httperror.BadRequest("Invalid query parameter: method. Valid values are: file or string", err)
 	}

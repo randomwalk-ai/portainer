@@ -3,7 +3,7 @@ package tags
 import (
 	"errors"
 	"net/http"
-
+	"fmt"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/dataservices"
 	httperror "github.com/portainer/portainer/pkg/libhttp/error"
@@ -43,6 +43,7 @@ func (handler *Handler) tagCreate(w http.ResponseWriter, r *http.Request) *httpe
 		return httperror.BadRequest("Invalid request payload", err)
 	}
 
+	fmt.Println("in the function")
 	var tag *portainer.Tag
 	err = handler.DataStore.UpdateTx(func(tx dataservices.DataStoreTx) error {
 		tag, err = createTag(tx, payload)

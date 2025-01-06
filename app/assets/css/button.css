@@ -25,32 +25,32 @@ fieldset[disabled] .btn {
 }
 
 .btn.btn-primary {
-  @apply border-blue-8 bg-blue-8 text-white;
-  @apply hover:border-blue-9 hover:bg-blue-9 hover:text-white;
-  @apply th-dark:hover:border-blue-7 th-dark:hover:bg-blue-7;
+  @apply border-purple-8 bg-purple-8 text-white;
+  @apply hover:border-purple-9 hover:bg-purple-9 hover:text-white;
+  @apply th-dark:hover:border-purple-7 th-dark:hover:bg-purple-7;
 }
 
 .btn.btn-primary:active,
 .btn.btn-primary.active,
 .open > .dropdown-toggle.btn-primary {
-  @apply border-blue-5 bg-blue-9;
+  @apply border-purple-5 bg-purple-9;
 }
 
 .nav-pills > li.active > a,
 .nav-pills > li.active > a:hover,
 .nav-pills > li.active > a:focus {
-  @apply bg-blue-8;
+  @apply bg-purple-8;
 }
 
 /* Button Secondary */
 .btn.btn-secondary {
   @apply border border-solid;
 
-  @apply border-blue-8 bg-blue-2 text-blue-9;
-  @apply hover:bg-blue-3;
+  @apply border-purple-8 bg-purple-2 text-purple-9;
+  @apply hover:bg-purple-3;
 
-  @apply th-dark:border-blue-7 th-dark:bg-gray-10 th-dark:text-blue-3;
-  @apply th-dark:hover:bg-blue-11;
+  @apply th-dark:border-purple-7 th-dark:bg-gray-10 th-dark:text-purple-3;
+  @apply th-dark:hover:bg-purple-11;
 }
 
 .btn.btn-danger {
@@ -61,7 +61,7 @@ fieldset[disabled] .btn {
 .btn.btn-danger:active,
 .btn.btn-danger.active,
 .open > .dropdown-toggle.btn-danger {
-  @apply border-blue-5 bg-error-8 text-white;
+  @apply border-purple-5 bg-error-8 text-white;
 }
 
 .btn.btn-dangerlight {
@@ -101,9 +101,9 @@ fieldset[disabled] .btn {
 }
 
 .btn.btn-link {
-  @apply text-blue-8 hover:text-blue-9 disabled:text-gray-5;
-  @apply th-dark:text-blue-8 th-dark:hover:text-blue-7;
-  @apply th-highcontrast:text-blue-8 th-highcontrast:hover:text-blue-7;
+  @apply text-purple-8 hover:text-purple-9 disabled:text-gray-5;
+  @apply th-dark:text-purple-8 th-dark:hover:text-purple-7;
+  @apply th-highcontrast:text-purple-8 th-highcontrast:hover:text-purple-7;
 }
 
 .btn-group {
@@ -112,8 +112,8 @@ fieldset[disabled] .btn {
 
 .input-group-btn .btn.active,
 .btn-group .btn.active {
-  @apply border-blue-5 bg-blue-2 text-blue-10;
-  @apply th-dark:border-blue-9 th-dark:bg-blue-11 th-dark:text-blue-2;
+  @apply border-purple-5 bg-purple-2 text-purple-10;
+  @apply th-dark:border-purple-9 th-dark:bg-purple-11 th-dark:text-purple-2;
 }
 
 /* focus */
@@ -121,12 +121,12 @@ fieldset[disabled] .btn {
 .btn.btn-primary:focus,
 .btn.btn-secondary:focus,
 .btn.btn-light:focus {
-  @apply border-blue-5;
+  @apply border-purple-5;
 }
 
 .btn.btn-danger:focus,
 .btn.btn-dangerlight:focus {
-  @apply border-blue-6;
+  @apply border-purple-6;
 }
 
 .btn.btn-primary:focus,
@@ -134,7 +134,7 @@ fieldset[disabled] .btn {
 .btn.btn-light:focus,
 .btn.btn-danger:focus,
 .btn.btn-dangerlight:focus {
-  --btn-focus-color: var(--ui-blue-3);
+  --btn-focus-color: var(--ui-purple-3);
   box-shadow: 0px 0px 0px 4px var(--btn-focus-color);
 }
 
@@ -143,7 +143,7 @@ fieldset[disabled] .btn {
 [theme='dark'] .btn.btn-light:focus,
 [theme='dark'] .btn.btn-danger:focus,
 [theme='dark'] .btn.btn-dangerlight:focus {
-  --btn-focus-color: var(--ui-blue-11);
+  --btn-focus-color: var(--ui-purple-11);
 }
 
 a.no-link,
@@ -155,7 +155,7 @@ a[ng-click] {
 
 a,
 a.hyperlink {
-  @apply text-blue-8 hover:text-blue-9;
+  @apply text-purple-8 hover:text-purple-9;
   @apply cursor-pointer hover:underline;
 }
 

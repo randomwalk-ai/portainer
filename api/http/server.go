@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"time"
-
+	
 	"github.com/pkg/errors"
 	portainer "github.com/portainer/portainer/api"
 	"github.com/portainer/portainer/api/adminmonitor"
@@ -52,6 +52,7 @@ import (
 	"github.com/portainer/portainer/api/http/handler/users"
 	"github.com/portainer/portainer/api/http/handler/webhooks"
 	"github.com/portainer/portainer/api/http/handler/websocket"
+	"github.com/portainer/portainer/api/http/handler/test"
 	"github.com/portainer/portainer/api/http/middlewares"
 	"github.com/portainer/portainer/api/http/offlinegate"
 	"github.com/portainer/portainer/api/http/proxy"
@@ -294,6 +295,8 @@ func (server *Server) Start() error {
 	webhookHandler.DataStore = server.DataStore
 	webhookHandler.DockerClientFactory = server.DockerClientFactory
 
+	var testHandler = test.NewHandler(requestBouncer,server.DataStore)
+
 	server.Handler = &handler.Handler{
 		RoleHandler:            roleHandler,
 		AuthHandler:            authHandler,
@@ -331,6 +334,7 @@ func (server *Server) Start() error {
 		UserHandler:            userHandler,
 		WebSocketHandler:       websocketHandler,
 		WebhookHandler:         webhookHandler,
+		TestHandler:            testHandler,
 	}
 
 	errorLogger := NewHTTPLogger()
